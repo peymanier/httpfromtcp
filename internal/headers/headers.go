@@ -3,15 +3,8 @@ package headers
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
-
-type Headers map[string]string
-
-var rn = []byte("\r\n")
-
-func NewHeaders() Headers {
-	return map[string]string{}
-}
 
 func parseHeader(fieldLine []byte) (string, string, error) {
 	parts := bytes.SplitN(fieldLine, []byte(":"), 2)
@@ -29,7 +22,25 @@ func parseHeader(fieldLine []byte) (string, string, error) {
 	return string(name), string(value), nil
 }
 
-func (h Headers) Parse(data []byte) (int, bool, error) {
+var rn = []byte("\r\n")
+
+type Headers struct {
+	headers map[string]string
+}
+
+func NewHeaders() Headers {
+	return Headers{headers: map[string]string{}}
+}
+
+func (h *Headers) Get(name string) string {
+	return h.headers[strings.ToLower(name)]
+}
+
+func (h *Headers) Set(name, value string) {
+	h.headers[strings.ToLower(name)] = value
+}
+
+func (h *Headers) Parse(data []byte) (int, bool, error) {
 	read := 0
 	done := false
 
@@ -51,7 +62,7 @@ func (h Headers) Parse(data []byte) (int, bool, error) {
 		}
 
 		read += idx + len(rn)
-		h[name] = value
+		h.Set(name, value)
 	}
 
 	return read, done, nil
